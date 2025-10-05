@@ -2,25 +2,255 @@
 title: "R Notebook"
 output: github_document
 ---
-```{r}
-library(dada2)
+
+```{r, echo=TRUE}
+#Charger le package dada2
+library(dada2); 
 packageVersion("dada2")
 ```
-
-```{r}
-path <-"~/MiSeq_SOP"
+```{r, echo=TRUE}
+#Indiquer le chemin et lister les fichiers de MiSeq_SOP
+path <- "~/tutoriel_ADM/tutoriel_ADM/MiSeq_SOP" # CHANGE ME to the directory containing the fastq files after unzipping.
 list.files(path)
 ```
-```{r}
-# Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
+
+```{r, echo=TRUE}
+# Les fichiers de lecture fastq Forward et  reverse f ont respectivement un format : NOM ECHANTILLON_R1_001.fastq et  NOM ECHANTILLON_R2_001.fastq
 fnFs <- sort(list.files(path, pattern="_R1_001.fastq", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2_001.fastq", full.names = TRUE))
 # Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 ```
-```{r}
+
+
+```{r, echo=TRUE}
+##visualiser la qualité des lectures (reads) pour le forward
 plotQualityProfile(fnFs[1:2])
 ```
+
+```{r, echo=TRUE}
+##visualiser la qualité des lectures (reads) pour le reverse
+plotQualityProfile(fnRs[1:2])
+```
+
+```{r, echo=TRUE}
+# Créer un dossier contenant les fichiers bruts et les noms des fichiers filtrés
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+```
+
+```{r, echo=TRUE}
+#Filtrage et trimming 
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240,160),
+              maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
+              compress=TRUE, multithread=FALSE) # On Windows set multithread=FALSE
+head(out)
+```
+
+```{r, echo=TRUE}
+#Apprendre le taux d'erreurs pour les forwards
+errF <- learnErrors(filtFs, multithread=TRUE)
+```
+
+```{r, echo=TRUE}
+#Apprendre le taux d'erreurs pour les reverses
+errR <- learnErrors(filtRs, multithread=TRUE)
+```
+
+```{r, echo=TRUE}
+#visualiser les taux d'erreur estimés
+plotErrors(errF, nominalQ=TRUE)
+```
+
+
+```{r, echo=TRUE}
+#les séquences uniques détectées dans les fichiers forwards
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+```
+
+```{r, echo=TRUE}
+#les séquences uniques détectées dans les fichiers reverses
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+```
+
+```{r, echo=TRUE}
+#Regarder les ASVs détectées dans le premier échantillon 
+dadaFs[[1]]
+```
+
+```{r, echo=TRUE}
+#Assemblage des reads forwards et reverses
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+# Inspecter les résultats de fusion (merger) pour le premier échantillon
+head(mergers[[1]])
+```
+
+```{r, echo=TRUE}
+#Construction de la table ASV
+seqtab <- makeSequenceTable(mergers)
+dim(seqtab)
+```
+
+```{r, echo=TRUE}
+# vérifier la distribution des longueurs des séquences uniques
+table(nchar(getSequences(seqtab)))
+```
+
+```{r, echo=TRUE}
+#Suppression des chiméres
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+dim(seqtab.nochim)
+```
+
+```{r, echo=TRUE}
+#Total de lectures restantes après suppression des chimères
+sum(seqtab.nochim)/sum(seqtab)
+```
+
+```{r, echo=TRUE}
+#Suivre les lectures à travers le pipeline
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
+# If processing a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
+head(track)
+```
+
+```{r, echo=TRUE}
+#Attribution assignation taxonomique
+taxa <- assignTaxonomy(seqtab.nochim, "~/tutoriel_ADM/tutoriel_ADM/silva_nr99_v138.2_toGenus_trainset.fa.gz", multithread=FALSE)
+```
+
+```{r, echo=TRUE}
+#Assignation taxonomique des ASVs
+taxa <- addSpecies(taxa, "~/tutoriel_ADM/tutoriel_ADM/silva_v138.2_assignSpecies.fa.gz")
+```
+
+```{r, echo=TRUE}
+#Affichage de l'assignation taxonomique
+taxa.print <- taxa # Removing sequence rownames for display only
+rownames(taxa.print) <- NULL
+head(taxa.print)
+```
+
+```{r, echo=TRUE}
+#Installation du classifeur DECHIPHER
+library(DECIPHER); packageVersion("DECIPHER")
+```
+
+```{r, echo=TRUE}
+#Classification taxonomique avec le classifeur DECHIPHER
+dna <- DNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
+load("~/tutoriel_ADM/tutoriel_ADM/SILVA_SSU_r138_2_2024.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
+ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) # use all processors
+ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
+# Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
+taxid <- t(sapply(ids, function(x) {
+        m <- match(ranks, x$rank)
+        taxa <- x$taxon[m]
+        taxa[startsWith(taxa, "unclassified_")] <- NA
+        taxa
+}))
+colnames(taxid) <- ranks; rownames(taxid) <- getSequences(seqtab.nochim)
+```
+
+```{r, echo=TRUE}
+#Vérifier les ASVs détectées dans l’échantillon Mock
+unqs.mock <- seqtab.nochim["Mock",]
+unqs.mock <- sort(unqs.mock[unqs.mock>0], decreasing=TRUE) # Drop ASVs absent in the Mock
+cat("DADA2 inferred", length(unqs.mock), "sample sequences present in the Mock community.\n")
+```
+
+```{r, echo=TRUE}
+#L’évaluation de la qualité du pipeline DADA2 en utilisant un échantillon témoin Mock
+mock.ref <- getSequences(file.path(path, "HMP_MOCK.v35.fasta"))
+match.ref <- sum(sapply(names(unqs.mock), function(x) any(grepl(x, mock.ref))))
+cat("Of those,", sum(match.ref), "were exact matches to the expected reference sequences.\n")
+```
+
+```{r, echo=TRUE}
+#Importer Phyloseq
+library(phyloseq); packageVersion("phyloseq")
+```
+
+```{r, echo=TRUE}
+#Importer phyloseq
+library(Biostrings); packageVersion("Biostrings")
+```
+
+```{r, echo=TRUE}
+#Importer ggplot2
+library(ggplot2); packageVersion("ggplot2")
+```
+
+```{r, echo=TRUE}
+#Importer phyloseq
+theme_set(theme_bw())
+```
+
+```{r, echo=TRUE}
+#construire  un data.frame pour les échantillons
+samples.out <- rownames(seqtab.nochim)
+subject <- sapply(strsplit(samples.out, "D"), `[`, 1)
+gender <- substr(subject,1,1)
+subject <- substr(subject,2,999)
+day <- as.integer(sapply(strsplit(samples.out, "D"), `[`, 2))
+samdf <- data.frame(Subject=subject, Gender=gender, Day=day)
+samdf$When <- "Early"
+samdf$When[samdf$Day>100] <- "Late"
+rownames(samdf) <- samples.out
+```
+
+
+```{r, echo=TRUE}
+#créer un objet phyloseq
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE), 
+               sample_data(samdf), 
+               tax_table(taxa))
+ps <- prune_samples(sample_names(ps) != "Mock", ps) # Remove mock sample
+```
+
+
+```{r, echo=TRUE}
+#Préparer les noms des ASVs et à intégrer les séquences dans l’objet phyloseq
+dna <- Biostrings::DNAStringSet(taxa_names(ps))
+names(dna) <- taxa_names(ps)
+ps <- merge_phyloseq(ps, dna)
+taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
+ps
+```
+
+```{r,echo=TRUE}
+#Visualiser l'alpha-diversité 
+plot_richness(ps, x="Day", measures=c("Shannon", "Simpson"), color="When")
+```
+
+```{r, echo=TRUE}
+#Transformer les données pour une analyse beta-diversité et à réaliser une ordination NMDS basée sur la distance de Bray-Curtis
+ps.prop <- transform_sample_counts(ps, function(otu) otu/sum(otu))
+ord.nmds.bray <- ordinate(ps.prop, method="NMDS", distance="bray")
+```
+
+```{r}
+#visualiser le résultat de l'ordination NMDS basée sur la distance de Bray-Curtis
+plot_ordination(ps.prop, ord.nmds.bray, color="When", title="Bray NMDS")
+```
+
+
+```{r, echo=TRUE}
+#Visualiser la composition taxonomique des 20 ASVs les plus abondantes
+top20 <- names(sort(taxa_sums(ps), decreasing=TRUE))[1:20]
+ps.top20 <- transform_sample_counts(ps, function(OTU) OTU/sum(OTU))
+ps.top20 <- prune_taxa(top20, ps.top20)
+plot_bar(ps.top20, x="Day", fill="Family") + facet_wrap(~When, scales="free_x")
+```
+
+
+
+
 
 
 
