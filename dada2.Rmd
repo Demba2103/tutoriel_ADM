@@ -3,43 +3,63 @@ title: "R Notebook"
 output: github_document
 ---
 
+Installation dada2
+
 ```{r, echo=TRUE}
-#Charger le package dada2
+#Charger et verifier l'installation du package dada2
 library(dada2); 
 packageVersion("dada2")
 ```
+
+Le Chemin d'acces des fichiers du dossier "MiSeq_SOP"
+
 ```{r, echo=TRUE}
 #Indiquer le chemin et lister les fichiers de MiSeq_SOP
-path <- "~/tutoriel_ADM/tutoriel_ADM/MiSeq_SOP" # CHANGE ME to the directory containing the fastq files after unzipping.
+path <- "~/data_analysis/tutoriel_ADM/MiSeq_SOP" 
 list.files(path)
 ```
 
+Récupération des fichiers FASTQ et extraction des noms
+
 ```{r, echo=TRUE}
-# Les fichiers de lecture fastq Forward et  reverse f ont respectivement un format : NOM ECHANTILLON_R1_001.fastq et  NOM ECHANTILLON_R2_001.fastq
+# Les fichiers de lecture fastq Forward F et  reverse R ont respectivement un format : NOM ECHANTILLON_R1_001.fastq et  NOM ECHANTILLON_R2_001.fastq
 fnFs <- sort(list.files(path, pattern="_R1_001.fastq", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2_001.fastq", full.names = TRUE))
-# Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
+# extraire les noms d’échantillons à partir de fichiers FASTQ dont les noms suivent le format: SAMPLENAME_XXX.fastq
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 ```
 
+
+
+Inspecter les profils de qualité des forwards(fnFS[1:2])
 
 ```{r, echo=TRUE}
 ##visualiser la qualité des lectures (reads) pour le forward
 plotQualityProfile(fnFs[1:2])
 ```
 
+
+
+
+Inspecter les profils de qualité des reverses(fnRs[1:2])
+
 ```{r, echo=TRUE}
 ##visualiser la qualité des lectures (reads) pour le reverse
 plotQualityProfile(fnRs[1:2])
 ```
 
+
+
+Créer un dossier contenant les fichiers bruts et les noms des fichiers filtrés
+
 ```{r, echo=TRUE}
-# Créer un dossier contenant les fichiers bruts et les noms des fichiers filtrés
 filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 ```
+
+Filtrer et Rogner
 
 ```{r, echo=TRUE}
 #Filtrage et trimming 
@@ -48,37 +68,72 @@ out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240,160),
               compress=TRUE, multithread=FALSE) # On Windows set multithread=FALSE
 head(out)
 ```
+Interprétation : 
+-reads.in = nombre de lectures (reads) originales dans chaque fichier FASTQ avant filtrage
+-reads.out = nombre de lectures conservées après filtrage de qualité
+
+
+Apprendre les taux d'erreurs
 
 ```{r, echo=TRUE}
 #Apprendre le taux d'erreurs pour les forwards
 errF <- learnErrors(filtFs, multithread=TRUE)
 ```
+• 3514080 total bases = nombre total de nucléotides  
+• 139642 reads = nombre total de lectures prises pour estimer les taux d’erreur
+• 20 échantillons = nombre d’échantillons analysé
+
 
 ```{r, echo=TRUE}
 #Apprendre le taux d'erreurs pour les reverses
 errR <- learnErrors(filtRs, multithread=TRUE)
 ```
+• 22342720 total bases = nombre total de nucléotides  
+• 139642 reads = nombre total de lectures prises pour estimer les taux d’erreur
+• 20 échantillons = nombre d’échantillons analysé
+
+Visualiser les taux d’erreur estimés
 
 ```{r, echo=TRUE}
 #visualiser les taux d'erreur estimés
 plotErrors(errF, nominalQ=TRUE)
 ```
 
+Inférence d'échantillon avec l'algorithme Dada2
 
 ```{r, echo=TRUE}
 #les séquences uniques détectées dans les fichiers forwards
 dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
 ```
+Interprétation: 
+
+•	Sample 1 → échantillon 1
+•	7113 reads → nombre de lectures filtrées et utilisées pour cet échantillon (après avoir filtrer et rogner)
+•	1979 sequences uniques → nombre de séquences uniques (ASVs) identifiées par DADA2 après correction des erreurs
+Idem pour le reste
+
+
+
+
+les séquences uniques détectées dans les fichiers reverses
 
 ```{r, echo=TRUE}
-#les séquences uniques détectées dans les fichiers reverses
 dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 ```
+
+Idem pour les reverses
+
 
 ```{r, echo=TRUE}
 #Regarder les ASVs détectées dans le premier échantillon 
 dadaFs[[1]]
 ```
+
+Sur les 1979 séquences uniques filtrées pour l’échantillon 1, 128 ASVs uniques ont été identifiées par dada2
+
+
+
+Fusionner des lectures appariées
 
 ```{r, echo=TRUE}
 #Assemblage des reads forwards et reverses
@@ -87,27 +142,71 @@ mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 head(mergers[[1]])
 ```
 
+Construire une table de séquence
+
 ```{r, echo=TRUE}
 #Construction de la table ASV
 seqtab <- makeSequenceTable(mergers)
 dim(seqtab)
 ```
+Chaque ligne = un échantillon
+
+Chaque colonne = une ASV unique
+
+La valeur = nombre de lectures (reads) de cette ASV dans l’échantillon
+
+Ici nous avons avec la fonction dim() 20 échantillons et 293 ASVs
+
+
+
+
+La distribution des longueurs des séquences uniques
 
 ```{r, echo=TRUE}
 # vérifier la distribution des longueurs des séquences uniques
 table(nchar(getSequences(seqtab)))
 ```
+Interprétation:
+
+On observe que  : 
+
+-1 ASVs fait 251 nucléotides
+
+-88 ASVs font 252 nucléotides
+
+-196 ASVs font 253 nucléotides
+
+-6 ASVs font 254 nucléotides
+
+-2 ASVs font 255 nucléotides
+
+
+
+Supprimer les chimères
 
 ```{r, echo=TRUE}
-#Suppression des chiméres
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 dim(seqtab.nochim)
 ```
+• 293 = nombre total de séquences d’ASV détectées avant la suppression des chimères.
+• 61= séquences chimériques identifiées.
+•	20 = nombre d’échantillons
+•	232 = nombre d’ASV conservées après suppression des chimères.
+
+
+
+
+Total de lectures restantes après suppression des chimères
 
 ```{r, echo=TRUE}
-#Total de lectures restantes après suppression des chimères
 sum(seqtab.nochim)/sum(seqtab)
 ```
+96 % des lectures ont été conservées et seul 4% des lectures sont des chimères
+
+
+
+
+Suivi des lectures tout au long du pipeline
 
 ```{r, echo=TRUE}
 #Suivre les lectures à travers le pipeline
@@ -118,33 +217,48 @@ colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "n
 rownames(track) <- sample.names
 head(track)
 ```
+Ce tableau nous permet de voir combien de reads sont perdus à chaque étape et identifier un échantillon avec trop peu de reads ou une perte excessive. Nous avons conservé la majorité de nos données brutes, et il n'y a pas de baisse excessive associée à une étape particulière
+
+
+
+Attribution d'une taxonomie
 
 ```{r, echo=TRUE}
-#Attribution assignation taxonomique
-taxa <- assignTaxonomy(seqtab.nochim, "~/tutoriel_ADM/tutoriel_ADM/silva_nr99_v138.2_toGenus_trainset.fa.gz", multithread=FALSE)
+taxa <- assignTaxonomy(seqtab.nochim, "~/data_analysis/tutoriel_ADM/MiSeq_SOP/silva_nr99_v138.2_toGenus_trainset.fa.gz?download=1", multithread=FALSE)
 ```
 
-```{r, echo=TRUE}
-#Assignation taxonomique des ASVs
-taxa <- addSpecies(taxa, "~/tutoriel_ADM/tutoriel_ADM/silva_v138.2_assignSpecies.fa.gz")
-```
+
+Assignation des ASVs
 
 ```{r, echo=TRUE}
-#Affichage de l'assignation taxonomique
-taxa.print <- taxa # Removing sequence rownames for display only
+taxa <- addSpecies(taxa, "~/data_analysis/tutoriel_ADM/MiSeq_SOP/silva_v138.2_assignSpecies.fa.gz?download=1")
+```
+
+Affichage de l'assignation taxonomique
+
+```{r, echo=TRUE}
+taxa.print <- taxa  # on supprime les noms de ligne (séquences)
 rownames(taxa.print) <- NULL
-head(taxa.print)
+head(taxa.print) # on affiche les premières lignes 
 ```
 
+On observe que les Bacteroidetes sont les plus représentés et figurent parmi les taxons les plus abondants 
+
+
+
+Installation du classifeur DECHIPHER
+
 ```{r, echo=TRUE}
-#Installation du classifeur DECHIPHER
+#charger et verifier le package "DECHIPHER"
 library(DECIPHER); packageVersion("DECIPHER")
 ```
 
+
+Classification taxonomique avec le classifeur DECHIPHER
+
 ```{r, echo=TRUE}
-#Classification taxonomique avec le classifeur DECHIPHER
 dna <- DNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
-load("~/tutoriel_ADM/tutoriel_ADM/SILVA_SSU_r138_2_2024.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
+load("~/data_analysis/tutoriel_ADM/MiSeq_SOP/SILVA_SSU_r138_2_2024.RData") #charger la base de données de référence SILVA
 ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) # use all processors
 ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
 # Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
@@ -157,29 +271,45 @@ taxid <- t(sapply(ids, function(x) {
 colnames(taxid) <- ranks; rownames(taxid) <- getSequences(seqtab.nochim)
 ```
 
+
+
+
+Vérifier les ASVs détectées dans l’échantillon Mock
+
 ```{r, echo=TRUE}
-#Vérifier les ASVs détectées dans l’échantillon Mock
 unqs.mock <- seqtab.nochim["Mock",]
 unqs.mock <- sort(unqs.mock[unqs.mock>0], decreasing=TRUE) # Drop ASVs absent in the Mock
 cat("DADA2 inferred", length(unqs.mock), "sample sequences present in the Mock community.\n")
 ```
+DADA2 a identifié exactement 20 ASVs dans ton échantillon de “Mock community
+
+
+
+
+
+L’évaluation de la qualité du pipeline DADA2 en utilisant un échantillon témoin Mock
 
 ```{r, echo=TRUE}
-#L’évaluation de la qualité du pipeline DADA2 en utilisant un échantillon témoin Mock
 mock.ref <- getSequences(file.path(path, "HMP_MOCK.v35.fasta"))
 match.ref <- sum(sapply(names(unqs.mock), function(x) any(grepl(x, mock.ref))))
 cat("Of those,", sum(match.ref), "were exact matches to the expected reference sequences.\n")
 ```
+20 ASVs correspondent exactement aux séquences de référence attendues
+
+
+Importer Phyloseq
 
 ```{r, echo=TRUE}
-#Importer Phyloseq
+#charger et verifier le package "phyloseq"
 library(phyloseq); packageVersion("phyloseq")
 ```
+Charger le package Biostrings et verfier l'installation de Biostrings
 
 ```{r, echo=TRUE}
-#Importer phyloseq
 library(Biostrings); packageVersion("Biostrings")
 ```
+
+Charger le package ggplot2 et verfier l'installation ggplot2
 
 ```{r, echo=TRUE}
 #Importer ggplot2
@@ -187,12 +317,12 @@ library(ggplot2); packageVersion("ggplot2")
 ```
 
 ```{r, echo=TRUE}
-#Importer phyloseq
 theme_set(theme_bw())
 ```
 
+Construire  un data.frame pour les échantillons
+
 ```{r, echo=TRUE}
-#construire  un data.frame pour les échantillons
 samples.out <- rownames(seqtab.nochim)
 subject <- sapply(strsplit(samples.out, "D"), `[`, 1)
 gender <- substr(subject,1,1)
@@ -204,44 +334,47 @@ samdf$When[samdf$Day>100] <- "Late"
 rownames(samdf) <- samples.out
 ```
 
+créer un objet phyloseq
 
 ```{r, echo=TRUE}
-#créer un objet phyloseq
 ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE), 
                sample_data(samdf), 
                tax_table(taxa))
 ps <- prune_samples(sample_names(ps) != "Mock", ps) # Remove mock sample
 ```
 
+Préparer les noms des ASVs et à intégrer les séquences dans l’objet phyloseq
 
 ```{r, echo=TRUE}
-#Préparer les noms des ASVs et à intégrer les séquences dans l’objet phyloseq
 dna <- Biostrings::DNAStringSet(taxa_names(ps))
 names(dna) <- taxa_names(ps)
 ps <- merge_phyloseq(ps, dna)
 taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
 ps
 ```
-
+ La diversité alpha
+ 
 ```{r,echo=TRUE}
 #Visualiser l'alpha-diversité 
 plot_richness(ps, x="Day", measures=c("Shannon", "Simpson"), color="When")
 ```
 
+Transformer les données pour une analyse beta-diversité et à réaliser une ordination NMDS basée sur la distance de Bray-Curtis
+
 ```{r, echo=TRUE}
-#Transformer les données pour une analyse beta-diversité et à réaliser une ordination NMDS basée sur la distance de Bray-Curtis
 ps.prop <- transform_sample_counts(ps, function(otu) otu/sum(otu))
 ord.nmds.bray <- ordinate(ps.prop, method="NMDS", distance="bray")
 ```
 
+Visualiser le résultat de l'ordination NMDS basée sur la distance de Bray-Curtis
+
 ```{r}
-#visualiser le résultat de l'ordination NMDS basée sur la distance de Bray-Curtis
 plot_ordination(ps.prop, ord.nmds.bray, color="When", title="Bray NMDS")
 ```
 
+Visualiser la composition taxonomique des 20 ASVs les plus abondantes
 
 ```{r, echo=TRUE}
-#Visualiser la composition taxonomique des 20 ASVs les plus abondantes
 top20 <- names(sort(taxa_sums(ps), decreasing=TRUE))[1:20]
 ps.top20 <- transform_sample_counts(ps, function(OTU) OTU/sum(OTU))
 ps.top20 <- prune_taxa(top20, ps.top20)

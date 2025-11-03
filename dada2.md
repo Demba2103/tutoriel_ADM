@@ -1,8 +1,10 @@
 R Notebook
 ================
 
+Installation dada2
+
 ``` r
-#Charger le package dada2
+#Charger et verifier l'installation du package dada2
 library(dada2); 
 ```
 
@@ -14,43 +16,76 @@ packageVersion("dada2")
 
     ## [1] '1.28.0'
 
+Le Chemin d’acces des fichiers du dossier “MiSeq_SOP”
+
 ``` r
 #Indiquer le chemin et lister les fichiers de MiSeq_SOP
-path <- "~/tutoriel_ADM/tutoriel_ADM/MiSeq_SOP" # CHANGE ME to the directory containing the fastq files after unzipping.
+path <- "~/data_analysis/tutoriel_ADM/MiSeq_SOP" 
 list.files(path)
 ```
 
-    ##  [1] "F3D0_S188_L001_R1_001.fastq"   "F3D0_S188_L001_R2_001.fastq"  
-    ##  [3] "F3D1_S189_L001_R1_001.fastq"   "F3D1_S189_L001_R2_001.fastq"  
-    ##  [5] "F3D141_S207_L001_R1_001.fastq" "F3D141_S207_L001_R2_001.fastq"
-    ##  [7] "F3D142_S208_L001_R1_001.fastq" "F3D142_S208_L001_R2_001.fastq"
-    ##  [9] "F3D143_S209_L001_R1_001.fastq" "F3D143_S209_L001_R2_001.fastq"
-    ## [11] "F3D144_S210_L001_R1_001.fastq" "F3D144_S210_L001_R2_001.fastq"
-    ## [13] "F3D145_S211_L001_R1_001.fastq" "F3D145_S211_L001_R2_001.fastq"
-    ## [15] "F3D146_S212_L001_R1_001.fastq" "F3D146_S212_L001_R2_001.fastq"
-    ## [17] "F3D147_S213_L001_R1_001.fastq" "F3D147_S213_L001_R2_001.fastq"
-    ## [19] "F3D148_S214_L001_R1_001.fastq" "F3D148_S214_L001_R2_001.fastq"
-    ## [21] "F3D149_S215_L001_R1_001.fastq" "F3D149_S215_L001_R2_001.fastq"
-    ## [23] "F3D150_S216_L001_R1_001.fastq" "F3D150_S216_L001_R2_001.fastq"
-    ## [25] "F3D2_S190_L001_R1_001.fastq"   "F3D2_S190_L001_R2_001.fastq"  
-    ## [27] "F3D3_S191_L001_R1_001.fastq"   "F3D3_S191_L001_R2_001.fastq"  
-    ## [29] "F3D5_S193_L001_R1_001.fastq"   "F3D5_S193_L001_R2_001.fastq"  
-    ## [31] "F3D6_S194_L001_R1_001.fastq"   "F3D6_S194_L001_R2_001.fastq"  
-    ## [33] "F3D7_S195_L001_R1_001.fastq"   "F3D7_S195_L001_R2_001.fastq"  
-    ## [35] "F3D8_S196_L001_R1_001.fastq"   "F3D8_S196_L001_R2_001.fastq"  
-    ## [37] "F3D9_S197_L001_R1_001.fastq"   "F3D9_S197_L001_R2_001.fastq"  
-    ## [39] "filtered"                      "HMP_MOCK.v35.fasta"           
-    ## [41] "Mock_S280_L001_R1_001.fastq"   "Mock_S280_L001_R2_001.fastq"  
-    ## [43] "mouse.dpw.metadata"            "mouse.time.design"            
-    ## [45] "stability.batch"               "stability.files"
+    ##  [1] "F3D0_S188_L001_R1_001.fastq"                          
+    ##  [2] "F3D0_S188_L001_R2_001.fastq"                          
+    ##  [3] "F3D1_S189_L001_R1_001.fastq"                          
+    ##  [4] "F3D1_S189_L001_R2_001.fastq"                          
+    ##  [5] "F3D141_S207_L001_R1_001.fastq"                        
+    ##  [6] "F3D141_S207_L001_R2_001.fastq"                        
+    ##  [7] "F3D142_S208_L001_R1_001.fastq"                        
+    ##  [8] "F3D142_S208_L001_R2_001.fastq"                        
+    ##  [9] "F3D143_S209_L001_R1_001.fastq"                        
+    ## [10] "F3D143_S209_L001_R2_001.fastq"                        
+    ## [11] "F3D144_S210_L001_R1_001.fastq"                        
+    ## [12] "F3D144_S210_L001_R2_001.fastq"                        
+    ## [13] "F3D145_S211_L001_R1_001.fastq"                        
+    ## [14] "F3D145_S211_L001_R2_001.fastq"                        
+    ## [15] "F3D146_S212_L001_R1_001.fastq"                        
+    ## [16] "F3D146_S212_L001_R2_001.fastq"                        
+    ## [17] "F3D147_S213_L001_R1_001.fastq"                        
+    ## [18] "F3D147_S213_L001_R2_001.fastq"                        
+    ## [19] "F3D148_S214_L001_R1_001.fastq"                        
+    ## [20] "F3D148_S214_L001_R2_001.fastq"                        
+    ## [21] "F3D149_S215_L001_R1_001.fastq"                        
+    ## [22] "F3D149_S215_L001_R2_001.fastq"                        
+    ## [23] "F3D150_S216_L001_R1_001.fastq"                        
+    ## [24] "F3D150_S216_L001_R2_001.fastq"                        
+    ## [25] "F3D2_S190_L001_R1_001.fastq"                          
+    ## [26] "F3D2_S190_L001_R2_001.fastq"                          
+    ## [27] "F3D3_S191_L001_R1_001.fastq"                          
+    ## [28] "F3D3_S191_L001_R2_001.fastq"                          
+    ## [29] "F3D5_S193_L001_R1_001.fastq"                          
+    ## [30] "F3D5_S193_L001_R2_001.fastq"                          
+    ## [31] "F3D6_S194_L001_R1_001.fastq"                          
+    ## [32] "F3D6_S194_L001_R2_001.fastq"                          
+    ## [33] "F3D7_S195_L001_R1_001.fastq"                          
+    ## [34] "F3D7_S195_L001_R2_001.fastq"                          
+    ## [35] "F3D8_S196_L001_R1_001.fastq"                          
+    ## [36] "F3D8_S196_L001_R2_001.fastq"                          
+    ## [37] "F3D9_S197_L001_R1_001.fastq"                          
+    ## [38] "F3D9_S197_L001_R2_001.fastq"                          
+    ## [39] "filtered"                                             
+    ## [40] "HMP_MOCK.v35.fasta"                                   
+    ## [41] "Mock_S280_L001_R1_001.fastq"                          
+    ## [42] "Mock_S280_L001_R2_001.fastq"                          
+    ## [43] "mouse.dpw.metadata"                                   
+    ## [44] "mouse.time.design"                                    
+    ## [45] "silva_nr99_v138.2_toGenus_trainset.fa.gz?download=1"  
+    ## [46] "silva_nr99_v138.2_toSpecies_trainset.fa.gz?download=1"
+    ## [47] "SILVA_SSU_r138_2_2024.RData"                          
+    ## [48] "silva_v138.2_assignSpecies.fa.gz?download=1"          
+    ## [49] "stability.batch"                                      
+    ## [50] "stability.files"
+
+Récupération des fichiers FASTQ et extraction des noms
 
 ``` r
-# Les fichiers de lecture fastq Forward et  reverse f ont respectivement un format : NOM ECHANTILLON_R1_001.fastq et  NOM ECHANTILLON_R2_001.fastq
+# Les fichiers de lecture fastq Forward F et  reverse R ont respectivement un format : NOM ECHANTILLON_R1_001.fastq et  NOM ECHANTILLON_R2_001.fastq
 fnFs <- sort(list.files(path, pattern="_R1_001.fastq", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2_001.fastq", full.names = TRUE))
-# Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
+# extraire les noms d’échantillons à partir de fichiers FASTQ dont les noms suivent le format: SAMPLENAME_XXX.fastq
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 ```
+
+Inspecter les profils de qualité des forwards(fnFS\[1:2\])
 
 ``` r
 ##visualiser la qualité des lectures (reads) pour le forward
@@ -59,6 +94,8 @@ plotQualityProfile(fnFs[1:2])
 
 ![](dada2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
+Inspecter les profils de qualité des reverses(fnRs\[1:2\])
+
 ``` r
 ##visualiser la qualité des lectures (reads) pour le reverse
 plotQualityProfile(fnRs[1:2])
@@ -66,13 +103,17 @@ plotQualityProfile(fnRs[1:2])
 
 ![](dada2_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
+Créer un dossier contenant les fichiers bruts et les noms des fichiers
+filtrés
+
 ``` r
-# Créer un dossier contenant les fichiers bruts et les noms des fichiers filtrés
 filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 ```
+
+Filtrer et Rogner
 
 ``` r
 #Filtrage et trimming 
@@ -90,6 +131,12 @@ head(out)
     ## F3D143_S209_L001_R1_001.fastq     3178      2941
     ## F3D144_S210_L001_R1_001.fastq     4827      4312
 
+Interprétation : -reads.in = nombre de lectures (reads) originales dans
+chaque fichier FASTQ avant filtrage -reads.out = nombre de lectures
+conservées après filtrage de qualité
+
+Apprendre les taux d’erreurs
+
 ``` r
 #Apprendre le taux d'erreurs pour les forwards
 errF <- learnErrors(filtFs, multithread=TRUE)
@@ -97,12 +144,22 @@ errF <- learnErrors(filtFs, multithread=TRUE)
 
     ## 33514080 total bases in 139642 reads from 20 samples will be used for learning the error rates.
 
+• 3514080 total bases = nombre total de nucléotides  
+• 139642 reads = nombre total de lectures prises pour estimer les taux
+d’erreur • 20 échantillons = nombre d’échantillons analysé
+
 ``` r
 #Apprendre le taux d'erreurs pour les reverses
 errR <- learnErrors(filtRs, multithread=TRUE)
 ```
 
     ## 22342720 total bases in 139642 reads from 20 samples will be used for learning the error rates.
+
+• 22342720 total bases = nombre total de nucléotides  
+• 139642 reads = nombre total de lectures prises pour estimer les taux
+d’erreur • 20 échantillons = nombre d’échantillons analysé
+
+Visualiser les taux d’erreur estimés
 
 ``` r
 #visualiser les taux d'erreur estimés
@@ -113,6 +170,8 @@ plotErrors(errF, nominalQ=TRUE)
     ## Transformation introduced infinite values in continuous y-axis
 
 ![](dada2_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Inférence d’échantillon avec l’algorithme Dada2
 
 ``` r
 #les séquences uniques détectées dans les fichiers forwards
@@ -140,8 +199,16 @@ dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
     ## Sample 19 - 6504 reads in 1709 unique sequences.
     ## Sample 20 - 4314 reads in 897 unique sequences.
 
+Interprétation:
+
+• Sample 1 → échantillon 1 • 7113 reads → nombre de lectures filtrées et
+utilisées pour cet échantillon (après avoir filtrer et rogner) • 1979
+sequences uniques → nombre de séquences uniques (ASVs) identifiées par
+DADA2 après correction des erreurs Idem pour le reste
+
+les séquences uniques détectées dans les fichiers reverses
+
 ``` r
-#les séquences uniques détectées dans les fichiers reverses
 dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 ```
 
@@ -166,6 +233,8 @@ dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
     ## Sample 19 - 6504 reads in 1502 unique sequences.
     ## Sample 20 - 4314 reads in 732 unique sequences.
 
+Idem pour les reverses
+
 ``` r
 #Regarder les ASVs détectées dans le premier échantillon 
 dadaFs[[1]]
@@ -174,6 +243,11 @@ dadaFs[[1]]
     ## dada-class: object describing DADA2 denoising results
     ## 128 sequence variants were inferred from 1979 input unique sequences.
     ## Key parameters: OMEGA_A = 1e-40, OMEGA_C = 1e-40, BAND_SIZE = 16
+
+Sur les 1979 séquences uniques filtrées pour l’échantillon 1, 128 ASVs
+uniques ont été identifiées par dada2
+
+Fusionner des lectures appariées
 
 ``` r
 #Assemblage des reads forwards et reverses
@@ -240,6 +314,8 @@ head(mergers[[1]])
     ## 5       345       5       6    148         0      0      1   TRUE
     ## 6       282       6       5    148         0      0      2   TRUE
 
+Construire une table de séquence
+
 ``` r
 #Construction de la table ASV
 seqtab <- makeSequenceTable(mergers)
@@ -247,6 +323,16 @@ dim(seqtab)
 ```
 
     ## [1]  20 293
+
+Chaque ligne = un échantillon
+
+Chaque colonne = une ASV unique
+
+La valeur = nombre de lectures (reads) de cette ASV dans l’échantillon
+
+Ici nous avons avec la fonction dim() 20 échantillons et 293 ASVs
+
+La distribution des longueurs des séquences uniques
 
 ``` r
 # vérifier la distribution des longueurs des séquences uniques
@@ -257,8 +343,23 @@ table(nchar(getSequences(seqtab)))
     ## 251 252 253 254 255 
     ##   1  88 196   6   2
 
+Interprétation:
+
+On observe que :
+
+-1 ASVs fait 251 nucléotides
+
+-88 ASVs font 252 nucléotides
+
+-196 ASVs font 253 nucléotides
+
+-6 ASVs font 254 nucléotides
+
+-2 ASVs font 255 nucléotides
+
+Supprimer les chimères
+
 ``` r
-#Suppression des chiméres
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 ```
 
@@ -270,12 +371,23 @@ dim(seqtab.nochim)
 
     ## [1]  20 232
 
+• 293 = nombre total de séquences d’ASV détectées avant la suppression
+des chimères. • 61= séquences chimériques identifiées. • 20 = nombre
+d’échantillons • 232 = nombre d’ASV conservées après suppression des
+chimères.
+
+Total de lectures restantes après suppression des chimères
+
 ``` r
-#Total de lectures restantes après suppression des chimères
 sum(seqtab.nochim)/sum(seqtab)
 ```
 
     ## [1] 0.9640374
+
+96 % des lectures ont été conservées et seul 4% des lectures sont des
+chimères
+
+Suivi des lectures tout au long du pipeline
 
 ``` r
 #Suivre les lectures à travers le pipeline
@@ -295,21 +407,29 @@ head(track)
     ## F3D143  3178     2941      2822      2868   2553    2519
     ## F3D144  4827     4312      4151      4228   3646    3507
 
-``` r
-#Attribution assignation taxonomique
-taxa <- assignTaxonomy(seqtab.nochim, "~/tutoriel_ADM/tutoriel_ADM/silva_nr99_v138.2_toGenus_trainset.fa.gz", multithread=FALSE)
-```
+Ce tableau nous permet de voir combien de reads sont perdus à chaque
+étape et identifier un échantillon avec trop peu de reads ou une perte
+excessive. Nous avons conservé la majorité de nos données brutes, et il
+n’y a pas de baisse excessive associée à une étape particulière
+
+Attribution d’une taxonomie
 
 ``` r
-#Assignation taxonomique des ASVs
-taxa <- addSpecies(taxa, "~/tutoriel_ADM/tutoriel_ADM/silva_v138.2_assignSpecies.fa.gz")
+taxa <- assignTaxonomy(seqtab.nochim, "~/data_analysis/tutoriel_ADM/MiSeq_SOP/silva_nr99_v138.2_toGenus_trainset.fa.gz?download=1", multithread=FALSE)
 ```
 
+Assignation des ASVs
+
 ``` r
-#Affichage de l'assignation taxonomique
-taxa.print <- taxa # Removing sequence rownames for display only
+taxa <- addSpecies(taxa, "~/data_analysis/tutoriel_ADM/MiSeq_SOP/silva_v138.2_assignSpecies.fa.gz?download=1")
+```
+
+Affichage de l’assignation taxonomique
+
+``` r
+taxa.print <- taxa  # on supprime les noms de ligne (séquences)
 rownames(taxa.print) <- NULL
-head(taxa.print)
+head(taxa.print) # on affiche les premières lignes 
 ```
 
     ##      Kingdom    Phylum         Class         Order           Family          
@@ -327,8 +447,13 @@ head(taxa.print)
     ## [5,] "Bacteroides" NA     
     ## [6,] NA            NA
 
+On observe que les Bacteroidetes sont les plus représentés et figurent
+parmi les taxons les plus abondants
+
+Installation du classifeur DECHIPHER
+
 ``` r
-#Installation du classifeur DECHIPHER
+#charger et verifier le package "DECHIPHER"
 library(DECIPHER); packageVersion("DECIPHER")
 ```
 
@@ -386,10 +511,11 @@ library(DECIPHER); packageVersion("DECIPHER")
 
     ## [1] '2.28.0'
 
+Classification taxonomique avec le classifeur DECHIPHER
+
 ``` r
-#Classification taxonomique avec le classifeur DECHIPHER
 dna <- DNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
-load("~/tutoriel_ADM/tutoriel_ADM/SILVA_SSU_r138_2_2024.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
+load("~/data_analysis/tutoriel_ADM/MiSeq_SOP/SILVA_SSU_r138_2_2024.RData") #charger la base de données de référence SILVA
 ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) # use all processors
 ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
 # Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
@@ -402,8 +528,9 @@ taxid <- t(sapply(ids, function(x) {
 colnames(taxid) <- ranks; rownames(taxid) <- getSequences(seqtab.nochim)
 ```
 
+Vérifier les ASVs détectées dans l’échantillon Mock
+
 ``` r
-#Vérifier les ASVs détectées dans l’échantillon Mock
 unqs.mock <- seqtab.nochim["Mock",]
 unqs.mock <- sort(unqs.mock[unqs.mock>0], decreasing=TRUE) # Drop ASVs absent in the Mock
 cat("DADA2 inferred", length(unqs.mock), "sample sequences present in the Mock community.\n")
@@ -411,8 +538,13 @@ cat("DADA2 inferred", length(unqs.mock), "sample sequences present in the Mock c
 
     ## DADA2 inferred 20 sample sequences present in the Mock community.
 
+DADA2 a identifié exactement 20 ASVs dans ton échantillon de “Mock
+community
+
+L’évaluation de la qualité du pipeline DADA2 en utilisant un échantillon
+témoin Mock
+
 ``` r
-#L’évaluation de la qualité du pipeline DADA2 en utilisant un échantillon témoin Mock
 mock.ref <- getSequences(file.path(path, "HMP_MOCK.v35.fasta"))
 match.ref <- sum(sapply(names(unqs.mock), function(x) any(grepl(x, mock.ref))))
 cat("Of those,", sum(match.ref), "were exact matches to the expected reference sequences.\n")
@@ -420,8 +552,12 @@ cat("Of those,", sum(match.ref), "were exact matches to the expected reference s
 
     ## Of those, 20 were exact matches to the expected reference sequences.
 
+20 ASVs correspondent exactement aux séquences de référence attendues
+
+Importer Phyloseq
+
 ``` r
-#Importer Phyloseq
+#charger et verifier le package "phyloseq"
 library(phyloseq); packageVersion("phyloseq")
 ```
 
@@ -434,12 +570,15 @@ library(phyloseq); packageVersion("phyloseq")
 
     ## [1] '1.44.0'
 
+Charger le package Biostrings et verfier l’installation de Biostrings
+
 ``` r
-#Importer phyloseq
 library(Biostrings); packageVersion("Biostrings")
 ```
 
     ## [1] '2.68.1'
+
+Charger le package ggplot2 et verfier l’installation ggplot2
 
 ``` r
 #Importer ggplot2
@@ -449,12 +588,12 @@ library(ggplot2); packageVersion("ggplot2")
     ## [1] '3.4.3'
 
 ``` r
-#Importer phyloseq
 theme_set(theme_bw())
 ```
 
+Construire un data.frame pour les échantillons
+
 ``` r
-#construire  un data.frame pour les échantillons
 samples.out <- rownames(seqtab.nochim)
 subject <- sapply(strsplit(samples.out, "D"), `[`, 1)
 gender <- substr(subject,1,1)
@@ -466,16 +605,19 @@ samdf$When[samdf$Day>100] <- "Late"
 rownames(samdf) <- samples.out
 ```
 
+créer un objet phyloseq
+
 ``` r
-#créer un objet phyloseq
 ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE), 
                sample_data(samdf), 
                tax_table(taxa))
 ps <- prune_samples(sample_names(ps) != "Mock", ps) # Remove mock sample
 ```
 
+Préparer les noms des ASVs et à intégrer les séquences dans l’objet
+phyloseq
+
 ``` r
-#Préparer les noms des ASVs et à intégrer les séquences dans l’objet phyloseq
 dna <- Biostrings::DNAStringSet(taxa_names(ps))
 names(dna) <- taxa_names(ps)
 ps <- merge_phyloseq(ps, dna)
@@ -488,6 +630,8 @@ ps
     ## sample_data() Sample Data:       [ 19 samples by 4 sample variables ]
     ## tax_table()   Taxonomy Table:    [ 232 taxa by 7 taxonomic ranks ]
     ## refseq()      DNAStringSet:      [ 232 reference sequences ]
+
+La diversité alpha
 
 ``` r
 #Visualiser l'alpha-diversité 
@@ -503,8 +647,10 @@ plot_richness(ps, x="Day", measures=c("Shannon", "Simpson"), color="When")
 
 ![](dada2_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
+Transformer les données pour une analyse beta-diversité et à réaliser
+une ordination NMDS basée sur la distance de Bray-Curtis
+
 ``` r
-#Transformer les données pour une analyse beta-diversité et à réaliser une ordination NMDS basée sur la distance de Bray-Curtis
 ps.prop <- transform_sample_counts(ps, function(otu) otu/sum(otu))
 ord.nmds.bray <- ordinate(ps.prop, method="NMDS", distance="bray")
 ```
@@ -512,44 +658,51 @@ ord.nmds.bray <- ordinate(ps.prop, method="NMDS", distance="bray")
     ## Run 0 stress 0.08043117 
     ## Run 1 stress 0.08616061 
     ## Run 2 stress 0.08043117 
-    ## ... Procrustes: rmse 2.118973e-06  max resid 4.45572e-06 
+    ## ... Procrustes: rmse 5.76934e-06  max resid 1.254237e-05 
     ## ... Similar to previous best
-    ## Run 3 stress 0.08043117 
-    ## ... Procrustes: rmse 9.376169e-06  max resid 2.588163e-05 
-    ## ... Similar to previous best
-    ## Run 4 stress 0.3658229 
-    ## Run 5 stress 0.08076338 
-    ## ... Procrustes: rmse 0.01053293  max resid 0.03242191 
-    ## Run 6 stress 0.1212044 
-    ## Run 7 stress 0.09477207 
-    ## Run 8 stress 0.1262108 
-    ## Run 9 stress 0.08076338 
-    ## ... Procrustes: rmse 0.01052979  max resid 0.03241188 
+    ## Run 3 stress 0.08076338 
+    ## ... Procrustes: rmse 0.01052801  max resid 0.03240613 
+    ## Run 4 stress 0.08076341 
+    ## ... Procrustes: rmse 0.01058045  max resid 0.03257709 
+    ## Run 5 stress 0.08616061 
+    ## Run 6 stress 0.08616061 
+    ## Run 7 stress 0.1212044 
+    ## Run 8 stress 0.08616061 
+    ## Run 9 stress 0.08076339 
+    ## ... Procrustes: rmse 0.01054098  max resid 0.03244829 
     ## Run 10 stress 0.08076337 
-    ## ... Procrustes: rmse 0.01048531  max resid 0.0322669 
-    ## Run 11 stress 0.08616061 
-    ## Run 12 stress 0.08616061 
-    ## Run 13 stress 0.08076337 
-    ## ... Procrustes: rmse 0.01050734  max resid 0.03233869 
+    ## ... Procrustes: rmse 0.01048667  max resid 0.03227137 
+    ## Run 11 stress 0.08076339 
+    ## ... Procrustes: rmse 0.01054212  max resid 0.03245201 
+    ## Run 12 stress 0.08076339 
+    ## ... Procrustes: rmse 0.01055348  max resid 0.032489 
+    ## Run 13 stress 0.08616061 
     ## Run 14 stress 0.08616061 
-    ## Run 15 stress 0.08616061 
-    ## Run 16 stress 0.08616061 
-    ## Run 17 stress 0.1262108 
-    ## Run 18 stress 0.1212044 
+    ## Run 15 stress 0.08076339 
+    ## ... Procrustes: rmse 0.01054244  max resid 0.0324533 
+    ## Run 16 stress 0.09477208 
+    ## Run 17 stress 0.08616061 
+    ## Run 18 stress 0.08043116 
+    ## ... New best solution
+    ## ... Procrustes: rmse 2.595789e-06  max resid 7.331704e-06 
+    ## ... Similar to previous best
     ## Run 19 stress 0.08616061 
-    ## Run 20 stress 0.08076339 
-    ## ... Procrustes: rmse 0.01054391  max resid 0.03245787 
-    ## *** Best solution repeated 2 times
+    ## Run 20 stress 0.08076338 
+    ## ... Procrustes: rmse 0.01052999  max resid 0.03241193 
+    ## *** Best solution repeated 1 times
+
+Visualiser le résultat de l’ordination NMDS basée sur la distance de
+Bray-Curtis
 
 ``` r
-#visualiser le résultat de l'ordination NMDS basée sur la distance de Bray-Curtis
 plot_ordination(ps.prop, ord.nmds.bray, color="When", title="Bray NMDS")
 ```
 
 ![](dada2_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
+Visualiser la composition taxonomique des 20 ASVs les plus abondantes
+
 ``` r
-#Visualiser la composition taxonomique des 20 ASVs les plus abondantes
 top20 <- names(sort(taxa_sums(ps), decreasing=TRUE))[1:20]
 ps.top20 <- transform_sample_counts(ps, function(OTU) OTU/sum(OTU))
 ps.top20 <- prune_taxa(top20, ps.top20)
